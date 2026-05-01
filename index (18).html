@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ニュース速報画像メーカー</title>
+  <meta name="description" content="写真とテキストを入力するだけで、ニュース速報風の画像が作れるツールです。">
+  <meta property="og:title" content="ニュース速報画像メーカー">
+  <meta property="og:description" content="写真とテキストを入力するだけで、ニュース速報風の画像が作れるツールです。">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #f5f2ee;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    header {
+      background: #111;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header .logo-badge {
+      background: #cc0000;
+      color: white;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+    }
+    header h1 {
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 24px 16px 0;
+    }
+
+    .preview-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+      background: #ebe8e2;
+      cursor: grab;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+    }
+    .preview-wrap.dragging { cursor: grabbing; }
+    canvas#preview-canvas { width: 100%; height: 100%; display: block; }
+
+    .empty-preview {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px;
+      background: #ebe8e2;
+      pointer-events: none;
+    }
+    .ep-icon {
+      width: 56px; height: 56px;
+      background: #ddd9d0;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ep-icon svg { width: 28px; height: 28px; }
+    .ep-title {
+      font-size: 16px; font-weight: 700;
+      color: #999; letter-spacing: 0.06em;
+    }
+    .ep-sub { font-size: 12px; color: #bbb; }
+
+    .drag-hint {
+      position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.55); color: white;
+      font-size: 11px; padding: 4px 12px; border-radius: 20px;
+      pointer-events: none; white-space: nowrap;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .drag-hint.show { opacity: 1; }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #e8e4de;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #999;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .full { grid-column: 1 / -1; }
+
+    label.field-label {
+      display: block;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    input[type=text], textarea {
+      width: 100%;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      padding: 8px 10px;
+      border: 1px solid #e0dbd4;
+      border-radius: 6px;
+      background: #faf9f7;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type=text]:focus, textarea:focus { border-color: #cc0000; background: white; }
+    textarea { resize: vertical; min-height: 60px; }
+
+    .upload-zone {
+      border: 2px dashed #d8d3cc;
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      color: #aaa;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .upload-zone:hover { background: #faf9f7; border-color: #bbb; }
+    .upload-zone svg { display: block; margin: 0 auto 8px; opacity: 0.4; }
+    #file-input { display: none; }
+
+    .zoom-row {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .zoom-row label { font-size: 12px; color: #888; white-space: nowrap; }
+    .zoom-row input[type=range] { flex: 1; }
+    .zoom-row span { font-size: 12px; color: #888; min-width: 36px; text-align: right; }
+
+    .radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .radio-group label {
+      display: inline-flex; align-items: center;
+      font-size: 13px; color: #444;
+      cursor: pointer; padding: 5px 14px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      background: white;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .radio-group label:hover { border-color: #cc0000; color: #cc0000; }
+    .radio-group input[type=radio] { display: none; }
+    .radio-group label:has(input:checked) {
+      background: #cc0000; border-color: #cc0000; color: white;
+    }
+
+    .btn-dl {
+      width: 100%;
+      background: #cc0000;
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+    .btn-dl:hover { background: #aa0000; }
+
+    .disclaimer-note {
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: #ccc;
+      margin-top: 40px;
+      padding: 0 16px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">速報</div>
+  <h1>ニュース速報画像メーカー</h1>
+</header>
+
+<div class="container">
+
+  <div class="preview-wrap" id="preview-wrap">
+    <canvas id="preview-canvas"></canvas>
+    <div class="empty-preview" id="empty-preview">
+      <div class="ep-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+      </div>
+      <div class="ep-title">プレビュー</div>
+      <div class="ep-sub">画像をアップロードするとここにプレビューが表示されます</div>
+    </div>
+    <div class="drag-hint" id="drag-hint">ドラッグで位置調整</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">背景画像</div>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      クリックして画像をアップロード（またはドラッグ&ドロップ）
+    </div>
+    <input type="file" id="file-input" accept="image/*">
+    <div class="zoom-row" id="zoom-row">
+      <label>ズーム</label>
+      <input type="range" id="zoom" min="0.5" max="3" step="0.01" value="1">
+      <span id="zoom-val">1.0×</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ラベル</div>
+    <div class="radio-group">
+      <label><input type="radio" name="label" value="速報" checked><span>速報</span></label>
+      <label><input type="radio" name="label" value="悲報"><span>悲報</span></label>
+      <label><input type="radio" name="label" value="朗報"><span>朗報</span></label>
+      <label><input type="radio" name="label" value="号外"><span>号外</span></label>
+      <label><input type="radio" name="label" value="緊急"><span>緊急</span></label>
+      <label><input type="radio" name="label" value="警告"><span>警告</span></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">テキスト</div>
+    <div class="form-grid">
+      <div class="full">
+        <label class="field-label">サブ見出し（右上・2行まで）</label>
+        <textarea id="sub-headline" rows="2" placeholder="例：〇〇公園に謎の生物&#10;近隣住民 困惑の様子"></textarea>
+      </div>
+      <div>
+        <label class="field-label">地域・場所</label>
+        <input type="text" id="location" placeholder="例：東京 新宿区">
+      </div>
+      <div>
+        <label class="field-label">時刻</label>
+        <input type="text" id="time-text" placeholder="例：午前10時ごろ">
+      </div>
+      <div class="full">
+        <label class="field-label">メインテロップ（下部）</label>
+        <input type="text" id="main-headline" placeholder="例：〇〇公園で謎の生物を確認">
+      </div>
+      <div class="full">
+        <label class="field-label">クレジット（右下）</label>
+        <input type="text" id="credit" placeholder="例：撮影者名 @handle">
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-dl" onclick="downloadImage()">画像をダウンロード（1280×720）</button>
+  <p class="disclaimer-note">「これは実際のニュースではありません」の表記が画像に自動で入ります</p>
+
+  <footer>
+    <p>© nancoco — ニュース速報画像メーカー</p>
+  </footer>
+
+</div>
+
+<script>
+const canvas = document.getElementById('preview-canvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('preview-wrap');
+const emptyPreview = document.getElementById('empty-preview');
+const dragHint = document.getElementById('drag-hint');
+const zoomRow = document.getElementById('zoom-row');
+const zoomInput = document.getElementById('zoom');
+const zoomValEl = document.getElementById('zoom-val');
+
+let bgImage = null, zoom = 1, offsetX = 0, offsetY = 0;
+let dragging = false, dragStartX = 0, dragStartY = 0, dragOffX = 0, dragOffY = 0;
+
+function setupCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const dw = wrap.clientWidth, dh = wrap.clientHeight;
+  canvas.width = dw * dpr;
+  canvas.height = dh * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  renderCanvas();
+}
+
+document.getElementById('file-input').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (f) loadImage(f);
+});
+
+const uploadZone = document.getElementById('upload-zone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.background = '#faf9f7'; });
+uploadZone.addEventListener('dragleave', () => { uploadZone.style.background = ''; });
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.style.background = '';
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadImage(f);
+});
+
+function loadImage(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      bgImage = img;
+      zoom = 1; offsetX = 0; offsetY = 0;
+      emptyPreview.style.display = 'none';
+      zoomRow.style.display = 'flex';
+      zoomInput.value = 1;
+      zoomValEl.textContent = '1.0×';
+      dragHint.classList.add('show');
+      setTimeout(() => dragHint.classList.remove('show'), 2500);
+      renderCanvas();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+zoomInput.addEventListener('input', () => {
+  zoom = parseFloat(zoomInput.value);
+  zoomValEl.textContent = zoom.toFixed(1) + '×';
+  clampOffset();
+  renderCanvas();
+});
+
+wrap.addEventListener('mousedown', e => {
+  if (!bgImage) return;
+  dragging = true;
+  dragStartX = e.clientX; dragStartY = e.clientY;
+  dragOffX = offsetX; dragOffY = offsetY;
+  wrap.classList.add('dragging');
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const scale = zoom * Math.max(W / bgImage.width, H / bgImage.height);
+  offsetX = dragOffX + (e.clientX - dragStartX) / scale;
+  offsetY = dragOffY + (e.clientY - dragStartY) / scale;
+  clampOffset();
+  renderCanvas();
+});
+window.addEventListener('mouseup', () => { dragging = false; wrap.classList.remove('dragging'); });
+
+wrap.addEventListener('touchstart', e => {
+  if (!bgImage) return;
+  const t = e.touches[0];
+  dragging = true;
+  dragStartX = t.clientX; dragStartY = t.clientY;
+  dragOffX = offsetX; dragOffY = offsetY;
+}, { passive: true });
+wrap.addEventListener('touchmove', e => {
+  if (!dragging) return;
+  e.preventDefault();
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const scale = zoom * Math.max(W / bgImage.width, H / bgImage.height);
+  const t = e.touches[0];
+  offsetX = dragOffX + (t.clientX - dragStartX) / scale;
+  offsetY = dragOffY + (t.clientY - dragStartY) / scale;
+  clampOffset();
+  renderCanvas();
+}, { passive: false });
+wrap.addEventListener('touchend', () => { dragging = false; });
+
+function clampOffset() {
+  if (!bgImage) return;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const scale = zoom * Math.max(W / bgImage.width, H / bgImage.height);
+  const maxX = (bgImage.width * scale - W) / 2 / scale;
+  const maxY = (bgImage.height * scale - H) / 2 / scale;
+  offsetX = Math.max(-maxX, Math.min(maxX, offsetX));
+  offsetY = Math.max(-maxY, Math.min(maxY, offsetY));
+}
+
+['sub-headline','location','time-text','main-headline','credit'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', renderCanvas);
+});
+document.querySelectorAll('input[name=label]').forEach(r => r.addEventListener('change', renderCanvas));
+
+function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+function getLabel() { return document.querySelector('input[name=label]:checked')?.value || '速報'; }
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r); c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h); c.quadraticCurveTo(x,y+h,x,y+h-r);
+  c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y);
+  c.closePath();
+}
+
+function drawNews(c, W, H) {
+  const u = W / 640;
+  const label = getLabel();
+  const subInput = val('sub-headline');
+  const subLines = subInput ? subInput.split('\n').filter(l=>l.trim()) : ['ここにサブ見出し1行目', 'ここにサブ見出し2行目'];
+  const isSubPh = !subInput;
+  const locTxt = val('location') || '〇〇 △△区';
+  const timeTxt = val('time-text') || '午後〇時ごろ';
+  const mainTxt = val('main-headline') || 'ここにメインテロップを入力してください';
+  const isMainPh = !val('main-headline');
+  const credit = val('credit');
+  const DISC = '※これは実際のニュースではありません';
+
+  const topY=14*u, lW=38*u, lH=50*u, lX=W-262*u;
+  c.fillStyle='#cc0000'; roundRect(c,lX,topY,lW,lH,2*u); c.fill();
+
+  c.fillStyle='white'; c.textAlign='center'; c.textBaseline='top';
+  const chars=label.split('');
+  const cfs=chars.length<=2?14*u:11*u, clh=cfs*1.15;
+  const cStart=topY+(lH-clh*chars.length)/2;
+  c.font=`900 ${cfs}px 'Noto Sans JP',sans-serif`;
+  chars.forEach((ch,i)=>c.fillText(ch,lX+lW/2,cStart+i*clh));
+  c.textBaseline='alphabetic';
+
+  const bX=lX+lW+3*u, bW=W-bX-14*u;
+  c.fillStyle=isSubPh?'rgba(255,255,255,0.6)':'rgba(255,255,255,0.92)';
+  roundRect(c,bX,topY,bW,lH,2*u); c.fill();
+  const mxc=Math.max(...subLines.map(l=>l.length));
+  const sfs=Math.min(13*u,(bW-16*u)/Math.max(mxc*0.9,1)), slh=sfs*1.45;
+  const sStart=topY+(lH-slh*subLines.length)/2+sfs;
+  c.font=`700 ${sfs}px 'Noto Sans JP',sans-serif`;
+  c.fillStyle=isSubPh?'#aaa':'#111'; c.textAlign='left';
+  subLines.forEach((l,i)=>c.fillText(l,bX+8*u,sStart+i*slh));
+
+  c.shadowColor='rgba(0,0,0,0.85)'; c.shadowBlur=5*u; c.textAlign='right';
+  c.font=`700 ${14*u}px 'Noto Sans JP',sans-serif`;
+  c.fillStyle=val('location')?'white':'rgba(255,255,255,0.5)';
+  c.fillText(locTxt,W-14*u,100*u);
+  c.font=`400 ${11*u}px 'Noto Sans JP',sans-serif`;
+  c.fillStyle=val('time-text')?'white':'rgba(255,255,255,0.5)';
+  c.fillText(timeTxt,W-14*u,117*u);
+  c.shadowBlur=0;
+
+  const tH=52*u, tY=H-tH;
+  c.fillStyle='#cc0000'; c.fillRect(0,tY,88*u,tH);
+  c.fillStyle='#111'; c.fillRect(88*u,tY,W-88*u,tH);
+  c.fillStyle='white'; c.font=`900 ${18*u}px 'Noto Sans JP',sans-serif`;
+  c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(label,44*u,tY+tH/2);
+  const mfs=Math.min(22*u,(W-110*u-14*u)/(mainTxt.length*0.95+1));
+  c.font=`700 ${mfs}px 'Noto Sans JP',sans-serif`;
+  c.textAlign='left'; c.fillStyle=isMainPh?'rgba(255,255,255,0.45)':'white';
+  c.fillText(mainTxt,100*u,tY+tH/2);
+  c.textBaseline='alphabetic';
+
+  c.font=`400 ${10*u}px 'Noto Sans JP',sans-serif`;
+  c.fillStyle='rgba(255,255,255,0.82)'; c.textAlign='right';
+  c.shadowColor='rgba(0,0,0,0.9)'; c.shadowBlur=3*u;
+  c.fillText(DISC,W-12*u,tY-6*u);
+  if(credit) c.fillText(credit,W-12*u,tY-6*u-11*u*1.3);
+  c.shadowBlur=0;
+}
+
+function renderCanvas() {
+  if (!bgImage) return;
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  ctx.clearRect(0,0,W,H);
+  const scale = zoom * Math.max(W/bgImage.width, H/bgImage.height);
+  ctx.drawImage(bgImage,
+    (W - bgImage.width*scale)/2 + offsetX*scale,
+    (H - bgImage.height*scale)/2 + offsetY*scale,
+    bgImage.width*scale, bgImage.height*scale
+  );
+  drawNews(ctx, W, H);
+}
+
+function downloadImage() {
+  const W=1280, H=720;
+  const ec = document.createElement('canvas');
+  ec.width=W; ec.height=H;
+  const c = ec.getContext('2d');
+  if (bgImage) {
+    const scale = zoom * Math.max(W/bgImage.width, H/bgImage.height);
+    c.drawImage(bgImage,
+      (W - bgImage.width*scale)/2 + offsetX*scale,
+      (H - bgImage.height*scale)/2 + offsetY*scale,
+      bgImage.width*scale, bgImage.height*scale
+    );
+  } else {
+    c.fillStyle='#c8c5be'; c.fillRect(0,0,W,H);
+  }
+  drawNews(c, W, H);
+  setTimeout(() => {
+    const a = document.createElement('a');
+    a.download = 'news-image.png';
+    a.href = ec.toDataURL('image/png');
+    a.click();
+  }, 50);
+}
+
+window.addEventListener('load', setupCanvas);
+window.addEventListener('resize', setupCanvas);
+</script>
+</body>
+</html>
