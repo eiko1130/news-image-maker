@@ -80,10 +80,7 @@
       display: flex; align-items: center; justify-content: center;
     }
     .ep-icon svg { width: 28px; height: 28px; }
-    .ep-title {
-      font-size: 16px; font-weight: 700;
-      color: #999; letter-spacing: 0.06em;
-    }
+    .ep-title { font-size: 16px; font-weight: 700; color: #999; letter-spacing: 0.06em; }
     .ep-sub { font-size: 12px; color: #bbb; }
 
     .drag-hint {
@@ -103,23 +100,15 @@
       margin-bottom: 12px;
     }
     .card-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: #999;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      font-size: 11px; font-weight: 700; color: #999;
+      letter-spacing: 0.08em; text-transform: uppercase;
       margin-bottom: 14px;
     }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .full { grid-column: 1 / -1; }
 
-    label.field-label {
-      display: block;
-      font-size: 12px;
-      color: #888;
-      margin-bottom: 4px;
-    }
+    label.field-label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
 
     input[type=text], textarea {
       width: 100%;
@@ -138,12 +127,9 @@
 
     .upload-zone {
       border: 2px dashed #d8d3cc;
-      border-radius: 8px;
-      padding: 18px;
-      text-align: center;
-      cursor: pointer;
-      font-size: 13px;
-      color: #aaa;
+      border-radius: 8px; padding: 18px;
+      text-align: center; cursor: pointer;
+      font-size: 13px; color: #aaa;
       transition: background 0.15s, border-color 0.15s;
     }
     .upload-zone:hover { background: #faf9f7; border-color: #bbb; }
@@ -151,10 +137,7 @@
     #file-input { display: none; }
 
     .zoom-row {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
+      display: none; align-items: center; gap: 10px; margin-top: 10px;
     }
     .zoom-row label { font-size: 12px; color: #888; white-space: nowrap; }
     .zoom-row input[type=range] { flex: 1; }
@@ -163,50 +146,70 @@
     .radio-group { display: flex; gap: 6px; flex-wrap: wrap; }
     .radio-group label {
       display: inline-flex; align-items: center;
-      font-size: 13px; color: #444;
-      cursor: pointer; padding: 5px 14px;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      background: white;
-      transition: all 0.15s;
-      user-select: none;
+      font-size: 13px; color: #444; cursor: pointer;
+      padding: 5px 14px; border: 1px solid #ddd;
+      border-radius: 20px; background: white;
+      transition: all 0.15s; user-select: none;
     }
     .radio-group label:hover { border-color: #cc0000; color: #cc0000; }
     .radio-group input[type=radio] { display: none; }
-    .radio-group label:has(input:checked) {
-      background: #cc0000; border-color: #cc0000; color: white;
-    }
+    .radio-group label:has(input:checked) { background: #cc0000; border-color: #cc0000; color: white; }
 
     .btn-dl {
-      width: 100%;
-      background: #cc0000;
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 700;
+      width: 100%; background: #cc0000; color: white;
+      border: none; padding: 14px; border-radius: 8px;
+      font-size: 15px; font-weight: 700;
       font-family: 'Noto Sans JP', sans-serif;
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: background 0.15s;
-      margin-top: 4px;
+      cursor: pointer; letter-spacing: 0.04em;
+      transition: background 0.15s; margin-top: 4px;
     }
     .btn-dl:hover { background: #aa0000; }
 
-    .disclaimer-note {
-      font-size: 11px;
-      color: #bbb;
-      text-align: center;
-      margin-top: 10px;
-    }
+    .disclaimer-note { font-size: 11px; color: #bbb; text-align: center; margin-top: 10px; }
 
-    footer {
+    footer { text-align: center; font-size: 11px; color: #ccc; margin-top: 40px; padding: 0 16px; }
+
+    .ios-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.92);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .ios-overlay.show { display: flex; }
+    .ios-overlay img {
+      width: 100%;
+      max-width: 600px;
+      border-radius: 8px;
+      display: block;
+    }
+    .ios-hint {
+      margin-top: 20px;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
       text-align: center;
-      font-size: 11px;
-      color: #ccc;
-      margin-top: 40px;
-      padding: 0 16px;
+      line-height: 1.7;
+    }
+    .ios-hint span {
+      display: block;
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      font-weight: 400;
+      margin-top: 4px;
+    }
+    .ios-close {
+      margin-top: 24px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: none;
+      padding: 10px 32px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-family: 'Noto Sans JP', sans-serif;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -291,13 +294,23 @@
     </div>
   </div>
 
-  <button class="btn-dl" onclick="downloadImage()">画像をダウンロード（1280×720）</button>
+  <button class="btn-dl" onclick="handleSave()">画像を保存する</button>
   <p class="disclaimer-note">「これは実際のニュースではありません」の表記が画像に自動で入ります</p>
 
   <footer>
     <p>© nancoco — ニュース速報画像メーカー</p>
   </footer>
 
+</div>
+
+<!-- iOS用モーダル -->
+<div class="ios-overlay" id="ios-overlay">
+  <img id="ios-img" src="" alt="生成された画像">
+  <div class="ios-hint">
+    画像を長押し →「写真に追加」で保存できます
+    <span>背景タップで閉じる</span>
+  </div>
+  <button class="ios-close" onclick="closeIosOverlay()">閉じる</button>
 </div>
 
 <script>
@@ -312,6 +325,8 @@ const zoomValEl = document.getElementById('zoom-val');
 
 let bgImage = null, zoom = 1, offsetX = 0, offsetY = 0;
 let dragging = false, dragStartX = 0, dragStartY = 0, dragOffX = 0, dragOffY = 0;
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
@@ -445,10 +460,12 @@ function drawNews(c, W, H) {
   const topY=14*u, lW=38*u, lH=50*u, lX=W-262*u;
   c.fillStyle='#cc0000'; roundRect(c,lX,topY,lW,lH,2*u); c.fill();
 
-  c.fillStyle='white'; c.textAlign='center'; c.textBaseline='top';
+  c.fillStyle='white'; c.textAlign='center'; c.textBaseline='middle';
   const chars=label.split('');
-  const cfs=chars.length<=2?14*u:11*u, clh=cfs*1.15;
-  const cStart=topY+(lH-clh*chars.length)/2;
+  const cfs=chars.length<=2?16*u:13*u;
+  const clh=cfs*1.2;
+  const totalCharH=clh*chars.length;
+  const cStart=topY+(lH-totalCharH)/2+cfs*0.5;
   c.font=`900 ${cfs}px 'Noto Sans JP',sans-serif`;
   chars.forEach((ch,i)=>c.fillText(ch,lX+lW/2,cStart+i*clh));
   c.textBaseline='alphabetic';
@@ -478,7 +495,9 @@ function drawNews(c, W, H) {
   c.fillStyle='white'; c.font=`900 ${18*u}px 'Noto Sans JP',sans-serif`;
   c.textAlign='center'; c.textBaseline='middle';
   c.fillText(label,44*u,tY+tH/2);
-  const mfs=Math.min(22*u,(W-110*u-14*u)/(mainTxt.length*0.95+1));
+
+  const maxTelW = W-110*u-14*u;
+  const mfs = Math.max(18*u, Math.min(22*u, maxTelW/(mainTxt.length*0.6+1)));
   c.font=`700 ${mfs}px 'Noto Sans JP',sans-serif`;
   c.textAlign='left'; c.fillStyle=isMainPh?'rgba(255,255,255,0.45)':'white';
   c.fillText(mainTxt,100*u,tY+tH/2);
@@ -505,7 +524,7 @@ function renderCanvas() {
   drawNews(ctx, W, H);
 }
 
-function downloadImage() {
+function buildExportCanvas() {
   const W=1280, H=720;
   const ec = document.createElement('canvas');
   ec.width=W; ec.height=H;
@@ -521,13 +540,33 @@ function downloadImage() {
     c.fillStyle='#c8c5be'; c.fillRect(0,0,W,H);
   }
   drawNews(c, W, H);
-  setTimeout(() => {
+  return ec;
+}
+
+function handleSave() {
+  const ec = buildExportCanvas();
+  const dataUrl = ec.toDataURL('image/png');
+
+  if (isIOS) {
+    const overlay = document.getElementById('ios-overlay');
+    const img = document.getElementById('ios-img');
+    img.src = dataUrl;
+    overlay.classList.add('show');
+  } else {
     const a = document.createElement('a');
     a.download = 'news-image.png';
-    a.href = ec.toDataURL('image/png');
+    a.href = dataUrl;
     a.click();
-  }, 50);
+  }
 }
+
+function closeIosOverlay() {
+  document.getElementById('ios-overlay').classList.remove('show');
+}
+
+document.getElementById('ios-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeIosOverlay();
+});
 
 window.addEventListener('load', setupCanvas);
 window.addEventListener('resize', setupCanvas);
