@@ -446,6 +446,11 @@ function roundRect(c, x, y, w, h, r) {
 
 function drawNews(c, W, H) {
   const u = W / 640;
+
+  // テロップバー: 高さを72に拡大（52→72）
+  const tH = 72 * u;
+  const tY = H - tH;
+
   const label = getLabel();
   const subInput = val('sub-headline');
   const subLines = subInput ? subInput.split('\n').filter(l=>l.trim()) : ['ここにサブ見出し1行目', 'ここにサブ見出し2行目'];
@@ -457,6 +462,7 @@ function drawNews(c, W, H) {
   const credit = val('credit');
   const DISC = '※これは実際のニュースではありません';
 
+  // 上部ラベル
   const topY=14*u, lW=38*u, lH=50*u, lX=W-262*u;
   c.fillStyle='#cc0000'; roundRect(c,lX,topY,lW,lH,2*u); c.fill();
 
@@ -470,6 +476,7 @@ function drawNews(c, W, H) {
   chars.forEach((ch,i)=>c.fillText(ch,lX+lW/2,cStart+i*clh));
   c.textBaseline='alphabetic';
 
+  // サブ見出し枠
   const bX=lX+lW+3*u, bW=W-bX-14*u;
   c.fillStyle=isSubPh?'rgba(255,255,255,0.6)':'rgba(255,255,255,0.92)';
   roundRect(c,bX,topY,bW,lH,2*u); c.fill();
@@ -480,6 +487,7 @@ function drawNews(c, W, H) {
   c.fillStyle=isSubPh?'#aaa':'#111'; c.textAlign='left';
   subLines.forEach((l,i)=>c.fillText(l,bX+8*u,sStart+i*slh));
 
+  // 地域・時刻
   c.shadowColor='rgba(0,0,0,0.85)'; c.shadowBlur=5*u; c.textAlign='right';
   c.font=`700 ${14*u}px 'Noto Sans JP',sans-serif`;
   c.fillStyle=val('location')?'white':'rgba(255,255,255,0.5)';
@@ -489,25 +497,34 @@ function drawNews(c, W, H) {
   c.fillText(timeTxt,W-14*u,117*u);
   c.shadowBlur=0;
 
-  const tH=52*u, tY=H-tH;
-  c.fillStyle='#cc0000'; c.fillRect(0,tY,88*u,tH);
-  c.fillStyle='#111'; c.fillRect(88*u,tY,W-88*u,tH);
-  c.fillStyle='white'; c.font=`900 ${18*u}px 'Noto Sans JP',sans-serif`;
-  c.textAlign='center'; c.textBaseline='middle';
-  c.fillText(label,44*u,tY+tH/2);
+  // テロップバー背景
+  const labelAreaW = 100 * u;
+  c.fillStyle='#cc0000'; c.fillRect(0, tY, labelAreaW, tH);
+  c.fillStyle='#111'; c.fillRect(labelAreaW, tY, W-labelAreaW, tH);
 
-  const maxTelW = W-110*u-14*u;
-  const mfs = Math.max(18*u, Math.min(22*u, maxTelW/(mainTxt.length*0.6+1)));
+  // テロップバー内ラベル（大きく）
+  c.fillStyle='white';
+  c.font=`900 ${22*u}px 'Noto Sans JP',sans-serif`;
+  c.textAlign='center'; c.textBaseline='middle';
+  c.letterSpacing = `${0.05*u}px`;
+  c.fillText(label, labelAreaW/2, tY+tH/2);
+
+  // メインテロップ文字（大きく・字間広め）
+  const maxTelW = W - labelAreaW - 16*u;
+  const mfs = Math.max(24*u, Math.min(30*u, maxTelW / (mainTxt.length * 0.7 + 1)));
   c.font=`700 ${mfs}px 'Noto Sans JP',sans-serif`;
+  c.letterSpacing = `${0.08 * mfs}px`;
   c.textAlign='left'; c.fillStyle=isMainPh?'rgba(255,255,255,0.45)':'white';
-  c.fillText(mainTxt,100*u,tY+tH/2);
+  c.fillText(mainTxt, labelAreaW + 12*u, tY+tH/2);
+  c.letterSpacing = '0px';
   c.textBaseline='alphabetic';
 
+  // フェイクニュース表記・クレジット
   c.font=`400 ${10*u}px 'Noto Sans JP',sans-serif`;
   c.fillStyle='rgba(255,255,255,0.82)'; c.textAlign='right';
   c.shadowColor='rgba(0,0,0,0.9)'; c.shadowBlur=3*u;
-  c.fillText(DISC,W-12*u,tY-6*u);
-  if(credit) c.fillText(credit,W-12*u,tY-6*u-11*u*1.3);
+  c.fillText(DISC, W-12*u, tY-6*u);
+  if(credit) c.fillText(credit, W-12*u, tY-6*u-11*u*1.3);
   c.shadowBlur=0;
 }
 
